@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../utils/token_manager.dart';
+import '../core/app_routes.dart';
 
 class ProfileScreen extends StatelessWidget {
   void _logout(BuildContext context) async {
     await TokenManager.clearToken();
-    Navigator.pushReplacementNamed(context, '/login');
+    Navigator.pushNamed(context, AppRoutes.login);
   }
 
   @override

@@ -80,13 +80,13 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/forgot-password');
+                    Navigator.pushNamed(context, AppRoutes.forgotPassword);
                   },
                   child: Text("Forgot Password?"),
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/signup');
+                    Navigator.pushNamed(context, AppRoutes.signup);
                   },
                   child: Text("Sign Up"),
                 ),
