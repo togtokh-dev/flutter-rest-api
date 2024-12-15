@@ -1,6 +1,8 @@
 import '../core/api_client.dart';
 import '../core/api_constants.dart';
 import '../models/api_response.dart';
+import '../models/user_profile.dart';
+import '../utils/token_manager.dart';
 
 class AuthService {
   final ApiClient _apiClient = ApiClient();
@@ -19,10 +21,26 @@ class AuthService {
   Future<bool> verifyToken() async {
     try {
       final response = await _apiClient.get(ApiConstants.verifyTokenEndpoint);
+      if (response.data['success']) {
+        TokenManager.saveToken(response.data["token"] ?? '');
+      }
       return response.data['success'];
     } catch (e) {
       print(e);
       return false;
+    }
+  }
+
+  // Fetch User Profile and Save to Local Storage
+  Future<UserProfile> getUserProfile() async {
+    final response = await _apiClient.get(ApiConstants.verifyTokenEndpoint);
+
+    if (response.data['success']) {
+      final userProfile = UserProfile.fromJson(response.data['data']);
+      await TokenManager.saveUserInfo(userProfile); // Save user info locally
+      return userProfile;
+    } else {
+      throw Exception("Failed to fetch user profile");
     }
   }
 

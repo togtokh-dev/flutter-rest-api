@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'card_screen.dart';
 import 'profile_screen.dart';
+import '../services/auth_service.dart';
+import '../models/user_profile.dart';
+import '../utils/token_manager.dart';
 
 class NavigationScreen extends StatefulWidget {
   @override
@@ -9,6 +12,8 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
+  final AuthService _authService = AuthService();
+  UserProfile? _userProfile;
   int _selectedIndex = 0;
 
   // Screens for navigation
@@ -17,12 +22,33 @@ class _NavigationScreenState extends State<NavigationScreen> {
     CardScreen(),
     ProfileScreen(),
   ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
 
   // Updates the current index
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _loadUserProfile() async {
+    final localProfile = await TokenManager.getUserInfo();
+    setState(() {
+      _userProfile = localProfile;
+    });
+
+    try {
+      final updatedProfile = await _authService.getUserProfile();
+      setState(() {
+        _userProfile = updatedProfile;
+      });
+    } catch (e) {
+      print("Error fetching user profile: $e");
+    }
   }
 
   @override

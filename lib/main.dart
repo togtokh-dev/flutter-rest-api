@@ -3,6 +3,7 @@ import 'core/app_routes.dart';
 import 'utils/token_manager.dart';
 import 'views/login_screen.dart';
 import 'views/navigation_screen.dart';
+import 'services/auth_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,9 +12,16 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
+  // Updated _checkLoginStatus
   Future<bool> _checkLoginStatus() async {
+    final authService = AuthService();
     final token = await TokenManager.getToken();
-    return token != null && token.isNotEmpty;
+
+    if (token == null || token.isEmpty) {
+      return false; // No token
+    }
+
+    return await authService.verifyToken(); // Validate token with API
   }
 
   @override
