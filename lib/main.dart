@@ -4,6 +4,7 @@ import 'providers/auth_provider.dart';
 import 'core/app_routes.dart';
 import 'views/login_screen.dart';
 import 'views/navigation_screen.dart';
+import 'views/product_details_screen.dart';
 import 'core/theme.dart';
 
 void main() {
@@ -37,12 +38,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _initializeAuth() async {
-    print("_initializeAuth start");
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.checkLoginStatus();
-
-      print("_initializeAuth end");
     } catch (e) {
       print("Error in _initializeAuth: $e");
     } finally {
@@ -60,6 +58,24 @@ class _MyAppState extends State<MyApp> {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       routes: AppRoutes.routes,
+      onGenerateRoute: (settings) {
+        if (settings.name != null) {
+          Uri uri = Uri.parse(settings.name!);
+          if (uri.pathSegments.length == 2 &&
+              uri.pathSegments[0] == 'product') {
+            final productId = uri.pathSegments[1];
+            return MaterialPageRoute(
+              builder: (context) => ProductDetailsScreen(productId: productId),
+            );
+          }
+        }
+        // Fallback to a 404 screen
+        return MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Center(child: Text("404: Page not found")),
+          ),
+        );
+      },
       home: _isInitialized
           ? Consumer<AuthProvider>(
               builder: (context, authProvider, child) {
@@ -70,9 +86,8 @@ class _MyAppState extends State<MyApp> {
                 }
               },
             )
-          : Scaffold(
-              body:
-                  Center(child: CircularProgressIndicator()), // Loading screen
+          : const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             ),
     );
   }

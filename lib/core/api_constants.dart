@@ -1,5 +1,6 @@
 class ApiConstants {
   static const String baseUrl = "https://api.togtokh.dev";
+  static const String baseUrlSeller = "https://api.seller.mn";
 
   // Authentication Endpoints
   static const String loginEndpoint = "/main/auth/v1/user/login";
@@ -16,4 +17,6 @@ class ApiConstants {
       "/main/auth/v1/user/forgot/code";
   static const String resetPasswordEndpoint =
       "/main/auth/v1/user/forgot/password";
+  //seller
+  static const String productEndpoint = "/seller/main/v1/product/";
 }
