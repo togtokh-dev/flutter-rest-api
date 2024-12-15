@@ -8,43 +8,38 @@ class AuthService {
   final ApiClient _apiClient = ApiClient();
 
   // Login API
-  Future<ApiResponse<void>> login(String email, String password) async {
+  Future<ApiResponse<String>> login(String email, String password) async {
     final response = await _apiClient.post(ApiConstants.loginEndpoint, {
       "email": email,
       "password": password,
     });
 
-    return ApiResponse.fromJson(response.data, (data) => null);
+    return ApiResponse.fromJson(
+        response.data, (data) => response.data['token']);
   }
 
   // Verify Token API
   Future<bool> verifyToken() async {
     try {
       final response = await _apiClient.get(ApiConstants.verifyTokenEndpoint);
-      if (response.data['success']) {
-        TokenManager.saveToken(response.data["token"] ?? '');
-      }
       return response.data['success'];
     } catch (e) {
-      print(e);
+      print("Error verifying token: $e");
       return false;
     }
   }
 
-  // Fetch User Profile and Save to Local Storage
-  Future<UserProfile> getUserProfile() async {
+  // Fetch User Profile (from Server)
+  Future<UserProfile> fetchUserProfile() async {
     final response = await _apiClient.get(ApiConstants.verifyTokenEndpoint);
-
     if (response.data['success']) {
-      final userProfile = UserProfile.fromJson(response.data['data']);
-      await TokenManager.saveUserInfo(userProfile); // Save user info locally
-      return userProfile;
+      return UserProfile.fromJson(response.data['data']);
     } else {
       throw Exception("Failed to fetch user profile");
     }
   }
 
-  // Step 1: Signup
+  // Signup Step 1
   Future<ApiResponse<void>> signupStep1(
       String email, String password, String username) async {
     final response = await _apiClient.post(ApiConstants.signupStep1Endpoint, {
@@ -56,7 +51,7 @@ class AuthService {
     return ApiResponse.fromJson(response.data, (data) => null);
   }
 
-  // Step 2: Verify OTP Code
+  // Signup Step 2 (Verify OTP)
   Future<ApiResponse<void>> signupStep2(String code, String token) async {
     final response = await _apiClient.post(ApiConstants.signupStep2Endpoint, {
       "code": code,
@@ -66,17 +61,15 @@ class AuthService {
     return ApiResponse.fromJson(response.data, (data) => null);
   }
 
-  // Step 1: Send Forgot Password Request
+  // Forgot Password Steps
   Future<ApiResponse<void>> forgotPasswordRequest(String email) async {
     final response =
         await _apiClient.post(ApiConstants.forgotPasswordRequestEndpoint, {
       "email": email,
     });
-
     return ApiResponse.fromJson(response.data, (data) => null);
   }
 
-  // Step 2: Verify OTP Code
   Future<ApiResponse<void>> verifyForgotPasswordCode(
       String code, String forgotToken) async {
     final response =
@@ -84,11 +77,9 @@ class AuthService {
       "code": code,
       "forgot_token": forgotToken,
     });
-
     return ApiResponse.fromJson(response.data, (data) => null);
   }
 
-  // Step 3: Reset Password
   Future<ApiResponse<void>> resetPassword(
       String password, String code, String forgotToken) async {
     final response = await _apiClient.post(ApiConstants.resetPasswordEndpoint, {
@@ -96,7 +87,6 @@ class AuthService {
       "code": code,
       "forgot_token": forgotToken,
     });
-
     return ApiResponse.fromJson(response.data, (data) => null);
   }
 }

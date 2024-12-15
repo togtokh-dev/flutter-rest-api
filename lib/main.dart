@@ -1,57 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
 import 'core/app_routes.dart';
-import 'utils/token_manager.dart';
 import 'views/login_screen.dart';
 import 'views/navigation_screen.dart';
-import 'services/auth_service.dart';
+import 'core/theme.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // Updated _checkLoginStatus
-  Future<bool> _checkLoginStatus() async {
-    final authService = AuthService();
-    final token = await TokenManager.getToken();
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
 
-    if (token == null || token.isEmpty) {
-      return false; // No token
+class _MyAppState extends State<MyApp> {
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_isInitialized) {
+      _initializeAuth();
     }
+  }
 
-    return await authService.verifyToken(); // Validate token with API
+  void _initializeAuth() async {
+    print("_initializeAuth start");
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.checkLoginStatus();
+
+      print("_initializeAuth end");
+    } catch (e) {
+      print("Error in _initializeAuth: $e");
+    } finally {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter REST API Boilerplate',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: '/',
-      routes: AppRoutes.routes, // Centralized routing
-      home: FutureBuilder<bool>(
-        future: _checkLoginStatus(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          } else if (snapshot.hasData && snapshot.data == true) {
-            return NavigationScreen(); // Logged-in navigation
-          } else {
-            return LoginScreen(); // Non-logged-in screen
-          }
-        },
-      ),
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            body: Center(child: Text("404: Page not found")),
-          ),
-        );
-      },
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routes: AppRoutes.routes,
+      home: _isInitialized
+          ? Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                if (authProvider.isLoggedIn) {
+                  return NavigationScreen(); // Logged-in screen
+                } else {
+                  return LoginScreen(); // Login screen
+                }
+              },
+            )
+          : Scaffold(
+              body:
+                  Center(child: CircularProgressIndicator()), // Loading screen
+            ),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../services/auth_service.dart';
-import '../utils/token_manager.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../core/app_routes.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -10,39 +10,34 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final AuthService _authService = AuthService();
-
-  // Step 1 controllers
+  // Controllers for user input
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
-
-  // Step 2 controller
   final TextEditingController _otpController = TextEditingController();
 
-  // State tracking
   bool _isStep1Complete = false;
   bool _isLoading = false;
-  String _forgotToken = ""; // Token received from Step 1
 
-  // Step 1: Sign Up - Collect email, password, and username
+  // Step 1: Signup and Request OTP
   void _handleSignupStep1() async {
     setState(() => _isLoading = true);
+
     try {
-      final result = await _authService.signupStep1(
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      final result = await authProvider.signupStep1(
         _emailController.text.trim(),
         _passwordController.text.trim(),
         _usernameController.text.trim(),
       );
 
-      if (result.success) {
-        setState(() {
-          _isStep1Complete = true;
-          _forgotToken = result.token ?? "";
-        });
-        Fluttertoast.showToast(msg: result.message);
+      // Show toast based on result
+      if (result['success'] == true) {
+        setState(() => _isStep1Complete = true);
+        Fluttertoast.showToast(msg: result['message']);
       } else {
-        Fluttertoast.showToast(msg: "Step 1 Failed: ${result.message}");
+        Fluttertoast.showToast(msg: "Step 1 Failed: ${result['message']}");
       }
     } catch (e) {
       Fluttertoast.showToast(msg: "Error: $e");
@@ -51,22 +46,23 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  // Step 2: Verify OTP - Collect OTP input
+  // Step 2: Submit OTP
   void _handleSignupStep2() async {
     setState(() => _isLoading = true);
+
     try {
-      final result = await _authService.signupStep2(
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      final result = await authProvider.signupStep2(
         _otpController.text.trim(),
-        _forgotToken,
       );
 
-      if (result.success) {
-        // Save the token and navigate to ExampleScreen
-        await TokenManager.saveToken(result.token ?? "");
-        Fluttertoast.showToast(msg: result.message);
-        Navigator.pushNamed(context, AppRoutes.navigation);
+      // Show toast based on result
+      if (result['success'] == true) {
+        Fluttertoast.showToast(msg: result['message']);
+        Navigator.pushReplacementNamed(context, AppRoutes.navigation);
       } else {
-        Fluttertoast.showToast(msg: "OTP Failed: ${result.message}");
+        Fluttertoast.showToast(msg: "Step 2 Failed: ${result['message']}");
       }
     } catch (e) {
       Fluttertoast.showToast(msg: "Error: $e");
@@ -75,54 +71,62 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  // UI for Step 1: Signup form
+  // Step 1 UI: Email, Password, Username Input
   Widget _buildStep1Form() {
     return Column(
       children: [
         TextField(
           controller: _emailController,
-          decoration:
-              InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            border: OutlineInputBorder(),
+          ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         TextField(
           controller: _passwordController,
-          decoration: InputDecoration(
-              labelText: 'Password', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            border: OutlineInputBorder(),
+          ),
           obscureText: true,
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         TextField(
           controller: _usernameController,
-          decoration: InputDecoration(
-              labelText: 'Username', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Username',
+            border: OutlineInputBorder(),
+          ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _handleSignupStep1,
+          onPressed: _isLoading ? null : _handleSignupStep1,
           child: _isLoading
-              ? CircularProgressIndicator(color: Colors.white)
-              : Text("Sign Up (Step 1)"),
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text("Sign Up (Step 1)"),
         ),
       ],
     );
   }
 
-  // UI for Step 2: OTP Input form
+  // Step 2 UI: OTP Input
   Widget _buildStep2Form() {
     return Column(
       children: [
         TextField(
           controller: _otpController,
-          decoration: InputDecoration(
-              labelText: 'Enter OTP', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Enter OTP',
+            border: OutlineInputBorder(),
+          ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _handleSignupStep2,
+          onPressed: _isLoading ? null : _handleSignupStep2,
           child: _isLoading
-              ? CircularProgressIndicator(color: Colors.white)
-              : Text("Submit OTP (Step 2)"),
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text("Submit OTP (Step 2)"),
         ),
       ],
     );
@@ -131,7 +135,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
+      appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _isStep1Complete ? _buildStep2Form() : _buildStep1Form(),

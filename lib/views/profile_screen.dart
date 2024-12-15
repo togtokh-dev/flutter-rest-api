@@ -1,93 +1,108 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../models/user_profile.dart';
-import '../utils/token_manager.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../core/app_routes.dart';
 
-class ProfileScreen extends StatefulWidget {
-  @override
-  _ProfileScreenState createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  final AuthService _authService = AuthService();
-  UserProfile? _userProfile;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserProfile();
-  }
-
-  // Load user profile from local storage, then fetch latest from server
-  void _loadUserProfile() async {
-    final localProfile = await TokenManager.getUserInfo();
-    setState(() {
-      _userProfile = localProfile;
-    });
-
-    try {
-      final updatedProfile = await _authService.getUserProfile();
-      setState(() {
-        _userProfile = updatedProfile;
-      });
-    } catch (e) {
-      print("Error fetching user profile: $e");
-    }
-  }
-
-  void _logout() async {
-    await TokenManager.clearToken();
-    Navigator.pushReplacementNamed(context, '/login');
-  }
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userProfile = authProvider.userProfile;
+
+    // Function to refresh profile
+    Future<void> _refreshProfile() async {
+      try {
+        await authProvider.checkLoginStatus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile refreshed successfully!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to refresh profile: $e')),
+        );
+      }
+    }
+
+    // Function to logout
+    Future<void> _logout() async {
+      await authProvider.logout();
+      Navigator.pushNamedAndRemoveUntil(
+          context, AppRoutes.login, (route) => false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logged out successfully!')),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile"),
+        title: const Text('Profile'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshProfile,
+            tooltip: "Refresh Profile",
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
             onPressed: _logout,
             tooltip: "Logout",
           ),
         ],
       ),
-      body: _userProfile != null
-          ? Center(
-              child: Card(
-                margin: EdgeInsets.all(16.0),
-                elevation: 4.0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundImage: NetworkImage(_userProfile?.avatar ??
-                            'https://via.placeholder.com/150'),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        _userProfile?.nickname ?? "No Name",
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 5),
-                      Text("Email: ${_userProfile?.email ?? "Not Provided"}"),
-                      SizedBox(height: 5),
-                      Text(
-                          "Phone: ${_userProfile?.phoneNumber ?? "Not Provided"}"),
-                    ],
+      body: RefreshIndicator(
+        onRefresh: _refreshProfile, // Pull-to-refresh feature
+        child: authProvider.isLoggedIn && userProfile != null
+            ? ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  Center(
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: userProfile.avatar != null
+                          ? NetworkImage(userProfile.avatar!)
+                          : const AssetImage('assets/default_avatar.png')
+                              as ImageProvider,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+
+                  // User Name
+                  Center(
+                    child: Text(
+                      userProfile.nickname ?? "No Name",
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // User Email
+                  ListTile(
+                    leading: const Icon(Icons.email, color: Colors.blue),
+                    title: Text(
+                      userProfile.email ?? "Email not available",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // User Phone
+                  ListTile(
+                    leading: const Icon(Icons.phone, color: Colors.green),
+                    title: Text(
+                      userProfile.phoneNumber ?? "Phone not available",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              )
+            : const Center(
+                child: CircularProgressIndicator(),
               ),
-            )
-          : Center(child: Text("No user profile data available")),
+      ),
     );
   }
 }

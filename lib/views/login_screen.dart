@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../services/auth_service.dart';
-import '../utils/token_manager.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../core/app_routes.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,7 +10,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -19,26 +18,29 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await _authService.login(
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // Call the updated login method
+      final result = await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      if (result.success) {
-        await TokenManager.saveToken(result.token ?? '');
+      // Show dynamic message based on result
+      Fluttertoast.showToast(
+        msg: result['message'],
+        toastLength: Toast.LENGTH_LONG,
+      );
 
-        Fluttertoast.showToast(
-            msg: result.message, toastLength: Toast.LENGTH_SHORT);
-
-        // Navigate to ExampleScreen
-        Navigator.pushNamed(context, AppRoutes.navigation);
-      } else {
-        Fluttertoast.showToast(
-            msg: "Login Failed: ${result.message}",
-            toastLength: Toast.LENGTH_LONG);
+      if (result['success']) {
+        // Navigate to the navigation screen
+        Navigator.pushReplacementNamed(context, AppRoutes.navigation);
       }
     } catch (e) {
-      Fluttertoast.showToast(msg: "Error: $e", toastLength: Toast.LENGTH_LONG);
+      Fluttertoast.showToast(
+        msg: "An error occurred: $e",
+        toastLength: Toast.LENGTH_LONG,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -47,33 +49,39 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Welcome Back!",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            SizedBox(height: 20),
+            const Text(
+              "Welcome Back!",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
-                  labelText: 'Email', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(
-                  labelText: 'Password', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isLoading ? null : _login,
               child: _isLoading
-                  ? CircularProgressIndicator(color: Colors.white)
-                  : Text("Login"),
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Login"),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -82,13 +90,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.forgotPassword);
                   },
-                  child: Text("Forgot Password?"),
+                  child: const Text("Forgot Password?"),
                 ),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.signup);
                   },
-                  child: Text("Sign Up"),
+                  child: const Text("Sign Up"),
                 ),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   @override
@@ -8,8 +9,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final AuthService _authService = AuthService();
-
   // Controllers for the input fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
@@ -17,34 +16,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   bool _step1Success = false;
   bool _otpSuccess = false;
-  String _forgotToken = "";
+
+  String _forgotToken = ""; // Token returned after step 1
 
   // Step 1: Send Forgot Password Request
   void _sendResetRequest() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
-      final result = await _authService.forgotPasswordRequest(
+      final result = await authProvider.sendForgotPasswordRequest(
         _emailController.text.trim(),
       );
 
-      Fluttertoast.showToast(msg: result.message);
+      Fluttertoast.showToast(msg: result['message']);
       setState(() {
         _step1Success = true;
-        _forgotToken = result.token ?? ""; // Store token for Step 2
+        _forgotToken = result['token'] ?? "";
       });
     } catch (e) {
       Fluttertoast.showToast(msg: "Error: $e");
     }
   }
 
-  // Step 2: Verify OTP Code
+  // Step 2: Verify OTP
   void _verifyOtp() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
-      final result = await _authService.verifyForgotPasswordCode(
+      final result = await authProvider.verifyForgotPasswordCode(
         _otpController.text.trim(),
         _forgotToken,
       );
 
-      Fluttertoast.showToast(msg: result.message);
+      Fluttertoast.showToast(msg: result['message']);
       setState(() {
         _otpSuccess = true;
       });
@@ -55,15 +57,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   // Step 3: Reset Password
   void _resetPassword() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
-      final result = await _authService.resetPassword(
+      final result = await authProvider.resetForgotPassword(
         _passwordController.text.trim(),
         _otpController.text.trim(),
         _forgotToken,
       );
 
-      Fluttertoast.showToast(msg: result.message);
-      Navigator.pop(context); // Navigate back to login screen
+      Fluttertoast.showToast(msg: result['message']);
+      Navigator.pop(context); // Go back to Login screen
     } catch (e) {
       Fluttertoast.showToast(msg: "Error: $e");
     }
@@ -72,7 +75,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Forgot Password')),
+      appBar: AppBar(title: const Text('Forgot Password')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -82,44 +85,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               // Step 1: Email Input
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Enter Email',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _sendResetRequest,
-                child: Text("Send Reset Request"),
+                child: const Text("Send Reset Request"),
               ),
             ] else if (!_otpSuccess) ...[
               // Step 2: OTP Input
               TextField(
                 controller: _otpController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Enter OTP Code',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _verifyOtp,
-                child: Text("Verify OTP"),
+                child: const Text("Verify OTP"),
               ),
             ] else ...[
               // Step 3: New Password Input
               TextField(
                 controller: _passwordController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Enter New Password',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _resetPassword,
-                child: Text("Reset Password"),
+                child: const Text("Reset Password"),
               ),
             ],
           ],
