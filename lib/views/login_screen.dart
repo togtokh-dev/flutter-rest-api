@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../services/auth_service.dart';
 import '../utils/token_manager.dart';
 import 'example_screen.dart';
@@ -10,47 +11,89 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   void _login() async {
+    setState(() => _isLoading = true);
+
     try {
-      final token = await _authService.login(
-        _emailController.text,
-        _passwordController.text,
+      final result = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
-      await TokenManager.saveToken(token);
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => ExampleScreen()));
+
+      if (result.success) {
+        await TokenManager.saveToken(result.token ?? '');
+
+        Fluttertoast.showToast(
+            msg: result.message, toastLength: Toast.LENGTH_SHORT);
+
+        // Navigate to ExampleScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ExampleScreen()),
+        );
+      } else {
+        Fluttertoast.showToast(
+            msg: "Login Failed: ${result.message}",
+            toastLength: Toast.LENGTH_LONG);
+      }
     } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: $e")),
-      );
+      Fluttertoast.showToast(msg: "Error: $e", toastLength: Toast.LENGTH_LONG);
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(title: Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text("Welcome Back!",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: "Email"),
+              decoration: InputDecoration(
+                  labelText: 'Email', border: OutlineInputBorder()),
             ),
+            SizedBox(height: 10),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: "Password"),
+              decoration: InputDecoration(
+                  labelText: 'Password', border: OutlineInputBorder()),
               obscureText: true,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _login,
-              child: Text("Login"),
+              onPressed: _isLoading ? null : _login,
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text("Login"),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/forgot-password');
+                  },
+                  child: Text("Forgot Password?"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/signup');
+                  },
+                  child: Text("Sign Up"),
+                ),
+              ],
             ),
           ],
         ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'services/auth_service.dart';
 import 'views/login_screen.dart';
 import 'views/example_screen.dart';
+import 'views/forgot_password_screen.dart';
+import 'views/signup_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,21 +24,23 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => FutureBuilder<bool>(
-          future: _checkLoginStatus(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            } else if (snapshot.data == true) {
-              return ExampleScreen();
-            } else {
-              return LoginScreen();
-            }
-          },
-        ),
+              future: _checkLoginStatus(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                } else if (snapshot.data == true) {
+                  return ExampleScreen();
+                } else {
+                  return LoginScreen();
+                }
+              },
+            ),
         '/login': (context) => LoginScreen(),
         '/home': (context) => ExampleScreen(),
+        '/forgot-password': (context) => ForgotPasswordScreen(),
+        '/signup': (context) => SignupScreen(),
       },
       onUnknownRoute: (settings) {
         // Handles undefined routes
