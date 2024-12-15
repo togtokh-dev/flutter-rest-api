@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../services/auth_service.dart';
 import '../utils/token_manager.dart';
-import 'example_screen.dart';
+import '../core/app_routes.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -31,10 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
             msg: result.message, toastLength: Toast.LENGTH_SHORT);
 
         // Navigate to ExampleScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ExampleScreen()),
-        );
+        Navigator.pushNamed(context, AppRoutes.navigation);
       } else {
         Fluttertoast.showToast(
             msg: "Login Failed: ${result.message}",

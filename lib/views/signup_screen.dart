@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../services/auth_service.dart';
 import '../utils/token_manager.dart';
-import 'example_screen.dart';
+import '../core/app_routes.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -64,10 +64,7 @@ class _SignupScreenState extends State<SignupScreen> {
         // Save the token and navigate to ExampleScreen
         await TokenManager.saveToken(result.token ?? "");
         Fluttertoast.showToast(msg: result.message);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ExampleScreen()),
-        );
+        Navigator.pushNamed(context, AppRoutes.navigation);
       } else {
         Fluttertoast.showToast(msg: "OTP Failed: ${result.message}");
       }
