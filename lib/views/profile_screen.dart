@@ -97,6 +97,22 @@ class ProfileScreen extends StatelessWidget {
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
+                  const SizedBox(height: 20),
+
+                  // Orders Button
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.orders);
+                    },
+                    icon: const Icon(Icons.list_alt),
+                    label: const Text(
+                      "Orders",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16.0),
+                    ),
+                  ),
                 ],
               )
             : const Center(

@@ -269,3 +269,59 @@ class ChargeOption {
     );
   }
 }
+
+class Order {
+  final String? orderId;
+  final int? userId;
+  final String? userType;
+  final String? productId;
+  final String? itemId;
+  final String? transactionId;
+  final String? orderEmail;
+  final int? orderPhoneNumber;
+  final Map<String, dynamic>? orderInfo;
+  final String? status;
+  final double? amount;
+  final double? paidAmount;
+  final double? refundAmount;
+  final String? paidType;
+  final String? createdDate;
+
+  Order({
+    this.orderId,
+    this.userId,
+    this.userType,
+    this.productId,
+    this.itemId,
+    this.transactionId,
+    this.orderEmail,
+    this.orderPhoneNumber,
+    this.orderInfo,
+    this.status,
+    this.amount,
+    this.paidAmount,
+    this.refundAmount,
+    this.paidType,
+    this.createdDate,
+  });
+
+  factory Order.fromJson(Map<String, dynamic> json) {
+    return Order(
+      orderId: json['order_id'],
+      userId: json['user_id'],
+      userType: json['user_type'],
+      productId: json['product_id'],
+      itemId: json['item_id'],
+      transactionId: json['transaction_id'],
+      orderEmail: json['order_email'],
+      orderPhoneNumber: json['order_phone_number'],
+      orderInfo: json['order_info'],
+      status: json['status'],
+      amount: json['amount']?.toDouble(),
+      paidAmount: json['paid_amount']?.toDouble(),
+      refundAmount: json['refund_amount']?.toDouble(),
+      paidType: json['paid_type'],
+      createdDate: json['created_date'],
+    );
+  }
+}

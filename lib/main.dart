@@ -5,6 +5,7 @@ import 'core/app_routes.dart';
 import 'views/login_screen.dart';
 import 'views/navigation_screen.dart';
 import 'views/product_details_screen.dart';
+import 'views/order_details_screen.dart'; // Import OrderDetailsScreen
 import 'core/theme.dart';
 
 void main() {
@@ -58,24 +59,37 @@ class _MyAppState extends State<MyApp> {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       routes: AppRoutes.routes,
-      onGenerateRoute: (settings) {
-        if (settings.name != null) {
-          Uri uri = Uri.parse(settings.name!);
-          if (uri.pathSegments.length == 2 &&
-              uri.pathSegments[0] == 'product') {
-            final productId = uri.pathSegments[1];
-            return MaterialPageRoute(
-              builder: (context) => ProductDetailsScreen(productId: productId),
-            );
-          }
-        }
-        // Fallback to a 404 screen
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            body: Center(child: Text("404: Page not found")),
-          ),
-        );
-      },
+      // onGenerateRoute: (settings) {
+      //   // Dynamic route handling
+      //   if (settings.name != null) {
+      //     Uri uri = Uri.parse(settings.name!);
+
+      //     // Product details route
+      //     if (uri.pathSegments.length == 2 &&
+      //         uri.pathSegments[0] == 'product') {
+      //       final productId = uri.pathSegments[1];
+      //       return MaterialPageRoute(
+      //         builder: (context) => ProductDetailsScreen(productId: productId),
+      //       );
+      //     }
+
+      //     // // Order details route
+      //     // if (uri.pathSegments.length == 2 &&
+      //     //     uri.pathSegments[0] == 'order-details') {
+      //     //   final orderId = uri.pathSegments[1];
+      //     //   return MaterialPageRoute(
+      //     //     builder: (context) => OrderDetailsScreen(orderId: orderId),
+      //     //   );
+      //     // }
+      //   }
+
+      //   // Fallback to a 404 screen
+      //   return MaterialPageRoute(
+      //     builder: (context) => Scaffold(
+      //       body: Center(child: Text("404: Page not found")),
+      //     ),
+      //   );
+      // },
       home: _isInitialized
           ? Consumer<AuthProvider>(
               builder: (context, authProvider, child) {

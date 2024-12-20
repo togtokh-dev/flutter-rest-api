@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../core/api_client.dart';
 import '../core/api_constants.dart';
 import '../models/seller.dart'; // Product model
+import '../core/app_routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -93,10 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildProductCard(Product product) {
     return GestureDetector(
       onTap: () {
-        // Navigate to ProductDetailsScreen with the product ID
         Navigator.pushNamed(
           context,
-          '/product/${product.id}', // Pass product ID as route parameter
+          AppRoutes.productDetails,
+          arguments: {'productId': product.id}, // Pass productId dynamically
         );
       },
       child: Card(
